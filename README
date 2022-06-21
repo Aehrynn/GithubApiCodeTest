@@ -1,0 +1,15 @@
+GithubAPI Code Test
+
+To build
+
+`go build`
+
+To Run (Linux)
+`./Main`
+
+Or Main.exe on Windows
+
+Potential Enhancements
+
+Use Github credentials to increase rate limits
+Option for the kind of format of the output file
