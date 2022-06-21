@@ -2,6 +2,7 @@ package GithubApi
 
 import (
 	"GithubApiCodeTest/Main/v2/Structs"
+	"GithubApiCodeTest/Main/v2/constants"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -12,7 +13,7 @@ func GetRepositories(organisationString string) ([]Structs.Repository, error) {
 	method := "GET"
 
 	client := &http.Client{}
-	req, err := http.NewRequest(method, url, nil)
+	req, err := constants.NewHttpRequest(method, url, nil)
 
 	if err != nil {
 		fmt.Println(err)
@@ -24,6 +25,15 @@ func GetRepositories(organisationString string) ([]Structs.Repository, error) {
 		return []Structs.Repository{}, err
 	}
 	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		errorMessage := Structs.GithubError{}
+		decodeErr := json.NewDecoder(res.Body).Decode(&errorMessage)
+		if decodeErr != nil {
+			return []Structs.Repository{}, decodeErr
+		}
+		return []Structs.Repository{}, fmt.Errorf(errorMessage.Message)
+	}
 
 	repositories := []Structs.Repository{}
 	decodeErr := json.NewDecoder(res.Body).Decode(&repositories)
@@ -34,8 +44,8 @@ func GetRepositories(organisationString string) ([]Structs.Repository, error) {
 	return repositories, nil
 }
 
-func GetTotalCommits(organisationString string, repositoryName string) (int, error) {
-	url := "https://api.github.com/repos/" + organisationString + "/" + repositoryName + "/stats/contributors"
+func GetTotalCommits(organisationString string, repositoryName string) (int, string, error) {
+	url := "https://api.github.com/repos/" + organisationString + "/" + repositoryName + "/commits"
 	method := "GET"
 
 	client := &http.Client{}
@@ -43,25 +53,37 @@ func GetTotalCommits(organisationString string, repositoryName string) (int, err
 
 	if err != nil {
 		fmt.Println(err)
-		return 0, err
+		return 0, "", err
 	}
 	res, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
-		return 0, err
+		return 0, "", err
 	}
 	defer res.Body.Close()
 
-	repositories := []Structs.Commits{}
+	repositories := []Structs.Commit{}
 	decodeErr := json.NewDecoder(res.Body).Decode(&repositories)
 	if decodeErr != nil {
-		return 0, decodeErr
+		return 0, "", decodeErr
 	}
 
-	return len(repositories), nil
+	topContributer := ""
+	//topContributerCommitNumber := 0
+	commits := 0
+
+	for _, _ = range repositories {
+		commits = commits + 1
+		//if value.Total >= topContributerCommitNumber {
+		//	topContributer = value.Author.Login
+		//	topContributerCommitNumber = value.Total
+		//}
+	}
+
+	return commits, topContributer, nil
 }
 
-func GetNumberOfReleases(organisationString string, repositoryName string) ([]Structs.Commits, error) {
+func GetNumberOfReleases(organisationString string, repositoryName string) ([]Structs.Releases, error) {
 	url := "https://api.github.com/repos/" + organisationString + "/" + repositoryName + "/releases"
 	method := "GET"
 
@@ -70,19 +92,19 @@ func GetNumberOfReleases(organisationString string, repositoryName string) ([]St
 
 	if err != nil {
 		fmt.Println(err)
-		return []Structs.Commits{}, err
+		return []Structs.Releases{}, err
 	}
 	res, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
-		return []Structs.Commits{}, err
+		return []Structs.Releases{}, err
 	}
 	defer res.Body.Close()
 
-	repositories := []Structs.Commits{}
+	repositories := []Structs.Releases{}
 	decodeErr := json.NewDecoder(res.Body).Decode(&repositories)
 	if decodeErr != nil {
-		return []Structs.Commits{}, decodeErr
+		return []Structs.Releases{}, decodeErr
 	}
 
 	return repositories, nil

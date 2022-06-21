@@ -3,10 +3,12 @@ package main
 import (
 	"GithubApiCodeTest/Main/v2/GithubApi"
 	"GithubApiCodeTest/Main/v2/Structs"
+	"GithubApiCodeTest/Main/v2/config"
 	"bufio"
 	"bytes"
 	"encoding/csv"
 	"fmt"
+	"github.com/spf13/viper"
 	"os"
 	"strconv"
 	"strings"
@@ -15,6 +17,19 @@ import (
 func main() {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Println("GithubApiCodeTest")
+	viper.SetConfigName("config") // name of config file (without extension)
+	viper.SetConfigType("yml")    // REQUIRED if the config file does not have the extension in the name
+	viper.AddConfigPath(".")      // optionally look for config in the working directory
+	var configuration config.Configurations
+
+	if err := viper.ReadInConfig(); err != nil {
+		fmt.Printf("Error reading config file, %s", err)
+	}
+
+	err := viper.Unmarshal(&configuration)
+	if err != nil {
+		fmt.Printf("Unable to decode into struct, %v", err)
+	}
 
 	for {
 		fmt.Print("Enter Github Organisation-> ")
@@ -29,19 +44,24 @@ func main() {
 
 			if err != nil {
 				fmt.Println("Error getting repos")
+				fmt.Println(err)
 				break
 			}
 
 			results := []Structs.GithubApiResults{}
-			for _, repository := range respositories {
-				totalCommits, _ := GithubApi.GetTotalCommits(anOrganisation.Name, repository.Name)
+			for key, repository := range respositories {
+				totalCommits, topContributer, _ := GithubApi.GetTotalCommits(anOrganisation.Name, repository.Name)
 				releases, _ := GithubApi.GetNumberOfReleases(anOrganisation.Name, repository.Name)
 				aResult := Structs.GithubApiResults{
 					RepoName:         repository.Name,
 					NumberOfCommits:  totalCommits,
 					NumberOfReleases: len(releases),
+					TopContributer:   topContributer,
 				}
 				results = append(results, aResult)
+				if key >= configuration.MaxRepoSize {
+					break
+				}
 			}
 
 			if len(results) == 0 {
