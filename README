@@ -21,3 +21,4 @@ Use Github credentials to increase rate limits
 Control Limits
 Option for the kind of format of the output file
 Unit testing
+Handle pagination of Requests

@@ -2,13 +2,14 @@ package GithubApi
 
 import (
 	"GithubApiCodeTest/Main/v2/Structs"
+	"GithubApiCodeTest/Main/v2/config"
 	"GithubApiCodeTest/Main/v2/constants"
 	"encoding/json"
 	"fmt"
 	"net/http"
 )
 
-func GetRepositories(organisationString string) ([]Structs.Repository, error) {
+func GetRepositories(organisationString string, configurations config.Configurations) ([]Structs.Repository, error) {
 	url := "https://api.github.com/orgs/" + organisationString + "/repos"
 	method := "GET"
 
@@ -19,6 +20,11 @@ func GetRepositories(organisationString string) ([]Structs.Repository, error) {
 		fmt.Println(err)
 		return []Structs.Repository{}, err
 	}
+
+	if configurations.UseConfigCredentials {
+		req.Header.Add("Authorization", "Bearer "+configurations.OAuthToken)
+	}
+
 	res, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
@@ -44,8 +50,9 @@ func GetRepositories(organisationString string) ([]Structs.Repository, error) {
 	return repositories, nil
 }
 
-func GetTotalCommits(organisationString string, repositoryName string) (int, string, error) {
-	url := "https://api.github.com/repos/" + organisationString + "/" + repositoryName + "/commits"
+func GetTotalCommits(organisationString string, repositoryName string, configurations config.Configurations) (int, string, error) {
+	//url := "https://api.github.com/repos/" + organisationString + "/" + repositoryName + "/commits"
+	url := "https://api.github.com/repos/" + organisationString + "/" + repositoryName + "/stats/contributors"
 	method := "GET"
 
 	client := &http.Client{}
@@ -55,6 +62,9 @@ func GetTotalCommits(organisationString string, repositoryName string) (int, str
 		fmt.Println(err)
 		return 0, "", err
 	}
+	if configurations.UseConfigCredentials {
+		req.Header.Add("Authorization", "Bearer "+configurations.OAuthToken)
+	}
 	res, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
@@ -62,28 +72,76 @@ func GetTotalCommits(organisationString string, repositoryName string) (int, str
 	}
 	defer res.Body.Close()
 
-	repositories := []Structs.Commit{}
+	//repositories := []Structs.Commit{}
+	repositories := []Structs.Contributer{}
 	decodeErr := json.NewDecoder(res.Body).Decode(&repositories)
 	if decodeErr != nil {
 		return 0, "", decodeErr
 	}
 
-	topContributer := ""
-	//topContributerCommitNumber := 0
-	commits := 0
+	//topContributer, err := GetTopCommiter(organisationString, repositoryName, configurations)
+	//if err != nil {
+	//	fmt.Println(err)
+	//	return 0, "", err
+	//}
 
-	for _, _ = range repositories {
-		commits = commits + 1
-		//if value.Total >= topContributerCommitNumber {
-		//	topContributer = value.Author.Login
-		//	topContributerCommitNumber = value.Total
-		//}
+	topContributer := ""
+	topContributerCommitNumber := 0
+	totalCommits := 0
+
+	for _, value := range repositories {
+		totalCommits = totalCommits + value.Total
+		if value.Total >= topContributerCommitNumber {
+			topContributer = value.Author.Login
+			topContributerCommitNumber = value.Total
+		}
 	}
 
-	return commits, topContributer, nil
+	//return len(repositories), topContributer, nil
+	return totalCommits, topContributer, nil
 }
 
-func GetNumberOfReleases(organisationString string, repositoryName string) ([]Structs.Releases, error) {
+func GetTopCommiter(organisationString string, repositoryName string, configurations config.Configurations) (string, error) {
+	url := "https://api.github.com/repos/" + organisationString + "/" + repositoryName + "/stats/contributors"
+	method := "GET"
+
+	client := &http.Client{}
+	req, err := http.NewRequest(method, url, nil)
+
+	if err != nil {
+		fmt.Println(err)
+		return "", err
+	}
+	if configurations.UseConfigCredentials {
+		req.Header.Add("Authorization", "Bearer "+configurations.OAuthToken)
+	}
+	res, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+		return "", err
+	}
+	defer res.Body.Close()
+
+	repositories := []Structs.Contributer{}
+	decodeErr := json.NewDecoder(res.Body).Decode(&repositories)
+	if decodeErr != nil {
+		return "", decodeErr
+	}
+
+	topContributer := ""
+	topContributerCommitNumber := 0
+
+	for _, value := range repositories {
+		if value.Total >= topContributerCommitNumber {
+			topContributer = value.Author.Login
+			topContributerCommitNumber = value.Total
+		}
+	}
+
+	return topContributer, nil
+}
+
+func GetNumberOfReleases(organisationString string, repositoryName string, configurations config.Configurations) ([]Structs.Releases, error) {
 	url := "https://api.github.com/repos/" + organisationString + "/" + repositoryName + "/releases"
 	method := "GET"
 
@@ -93,6 +151,9 @@ func GetNumberOfReleases(organisationString string, repositoryName string) ([]St
 	if err != nil {
 		fmt.Println(err)
 		return []Structs.Releases{}, err
+	}
+	if configurations.UseConfigCredentials {
+		req.Header.Add("Authorization", "Bearer "+configurations.OAuthToken)
 	}
 	res, err := client.Do(req)
 	if err != nil {

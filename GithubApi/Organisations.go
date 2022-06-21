@@ -2,12 +2,13 @@ package GithubApi
 
 import (
 	"GithubApiCodeTest/Main/v2/Structs"
+	"GithubApiCodeTest/Main/v2/config"
 	"encoding/json"
 	"fmt"
 	"net/http"
 )
 
-func GetOrganisation(oragnisationString string) (Structs.Organisation, error) {
+func GetOrganisation(oragnisationString string, configurations config.Configurations) (Structs.Organisation, error) {
 	url := "https://api.github.com/orgs/" + oragnisationString
 	method := "GET"
 
@@ -18,6 +19,11 @@ func GetOrganisation(oragnisationString string) (Structs.Organisation, error) {
 		fmt.Println(err)
 		return Structs.Organisation{}, err
 	}
+
+	if configurations.UseConfigCredentials {
+		req.Header.Add("Authorization", "Bearer "+configurations.OAuthToken)
+	}
+
 	res, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)

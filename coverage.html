@@ -1,0 +1,360 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>GithubApi: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">GithubApiCodeTest/Main/v2/GithubApi/Organisations.go (0.0%)</option>
+				
+				<option value="file1">GithubApiCodeTest/Main/v2/GithubApi/Reposistories.go (11.5%)</option>
+				
+				<option value="file2">GithubApiCodeTest/Main/v2/Main.go (0.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package GithubApi
+
+import (
+        "GithubApiCodeTest/Main/v2/Structs"
+        "encoding/json"
+        "fmt"
+        "net/http"
+)
+
+func GetOrganisation(oragnisationString string) (Structs.Organisation, error) <span class="cov0" title="0">{
+        url := "https://api.github.com/orgs/" + oragnisationString
+        method := "GET"
+
+        client := &amp;http.Client{}
+        req, err := http.NewRequest(method, url, nil)
+
+        if err != nil </span><span class="cov0" title="0">{
+                fmt.Println(err)
+                return Structs.Organisation{}, err
+        }</span>
+        <span class="cov0" title="0">res, err := client.Do(req)
+        if err != nil </span><span class="cov0" title="0">{
+                fmt.Println(err)
+                return Structs.Organisation{}, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        organisation := Structs.Organisation{}
+        decodeErr := json.NewDecoder(res.Body).Decode(&amp;organisation)
+        if decodeErr != nil </span><span class="cov0" title="0">{
+                return Structs.Organisation{}, decodeErr
+        }</span>
+
+        <span class="cov0" title="0">return organisation, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package GithubApi
+
+import (
+        "GithubApiCodeTest/Main/v2/Structs"
+        "GithubApiCodeTest/Main/v2/constants"
+        "encoding/json"
+        "fmt"
+        "net/http"
+)
+
+func GetRepositories(organisationString string) ([]Structs.Repository, error) <span class="cov8" title="1">{
+        url := "https://api.github.com/orgs/" + organisationString + "/repos"
+        method := "GET"
+
+        client := &amp;http.Client{}
+        req, err := constants.NewHttpRequest(method, url, nil)
+
+        if err != nil </span><span class="cov8" title="1">{
+                fmt.Println(err)
+                return []Structs.Repository{}, err
+        }</span>
+        <span class="cov0" title="0">res, err := client.Do(req)
+        if err != nil </span><span class="cov0" title="0">{
+                fmt.Println(err)
+                return []Structs.Repository{}, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        if res.StatusCode != http.StatusOK </span><span class="cov0" title="0">{
+                errorMessage := Structs.GithubError{}
+                decodeErr := json.NewDecoder(res.Body).Decode(&amp;errorMessage)
+                if decodeErr != nil </span><span class="cov0" title="0">{
+                        return []Structs.Repository{}, decodeErr
+                }</span>
+                <span class="cov0" title="0">return []Structs.Repository{}, fmt.Errorf(errorMessage.Message)</span>
+        }
+
+        <span class="cov0" title="0">repositories := []Structs.Repository{}
+        decodeErr := json.NewDecoder(res.Body).Decode(&amp;repositories)
+        if decodeErr != nil </span><span class="cov0" title="0">{
+                return []Structs.Repository{}, decodeErr
+        }</span>
+
+        <span class="cov0" title="0">return repositories, nil</span>
+}
+
+func GetTotalCommits(organisationString string, repositoryName string) (int, string, error) <span class="cov0" title="0">{
+        url := "https://api.github.com/repos/" + organisationString + "/" + repositoryName + "/commits"
+        method := "GET"
+
+        client := &amp;http.Client{}
+        req, err := http.NewRequest(method, url, nil)
+
+        if err != nil </span><span class="cov0" title="0">{
+                fmt.Println(err)
+                return 0, "", err
+        }</span>
+        <span class="cov0" title="0">res, err := client.Do(req)
+        if err != nil </span><span class="cov0" title="0">{
+                fmt.Println(err)
+                return 0, "", err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        repositories := []Structs.Commit{}
+        decodeErr := json.NewDecoder(res.Body).Decode(&amp;repositories)
+        if decodeErr != nil </span><span class="cov0" title="0">{
+                return 0, "", decodeErr
+        }</span>
+
+        <span class="cov0" title="0">topContributer := ""
+        //topContributerCommitNumber := 0
+commits := 0
+
+        for _, _ = range repositories </span><span class="cov0" title="0">{
+                commits = commits + 1
+                //if value.Total &gt;= topContributerCommitNumber {
+                //        topContributer = value.Author.Login
+                //        topContributerCommitNumber = value.Total
+                //}
+        }</span>
+
+        <span class="cov0" title="0">return commits, topContributer, nil</span>
+}
+
+func GetNumberOfReleases(organisationString string, repositoryName string) ([]Structs.Releases, error) <span class="cov0" title="0">{
+        url := "https://api.github.com/repos/" + organisationString + "/" + repositoryName + "/releases"
+        method := "GET"
+
+        client := &amp;http.Client{}
+        req, err := http.NewRequest(method, url, nil)
+
+        if err != nil </span><span class="cov0" title="0">{
+                fmt.Println(err)
+                return []Structs.Releases{}, err
+        }</span>
+        <span class="cov0" title="0">res, err := client.Do(req)
+        if err != nil </span><span class="cov0" title="0">{
+                fmt.Println(err)
+                return []Structs.Releases{}, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        repositories := []Structs.Releases{}
+        decodeErr := json.NewDecoder(res.Body).Decode(&amp;repositories)
+        if decodeErr != nil </span><span class="cov0" title="0">{
+                return []Structs.Releases{}, decodeErr
+        }</span>
+
+        <span class="cov0" title="0">return repositories, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package main
+
+import (
+        "GithubApiCodeTest/Main/v2/GithubApi"
+        "GithubApiCodeTest/Main/v2/Structs"
+        "GithubApiCodeTest/Main/v2/config"
+        "bufio"
+        "bytes"
+        "encoding/csv"
+        "fmt"
+        "github.com/spf13/viper"
+        "os"
+        "strconv"
+        "strings"
+)
+
+func main() <span class="cov0" title="0">{
+        reader := bufio.NewReader(os.Stdin)
+        fmt.Println("GithubApiCodeTest")
+        viper.SetConfigName("config") // name of config file (without extension)
+        viper.SetConfigType("yml")    // REQUIRED if the config file does not have the extension in the name
+        viper.AddConfigPath(".")      // optionally look for config in the working directory
+        var configuration config.Configurations
+
+        if err := viper.ReadInConfig(); err != nil </span><span class="cov0" title="0">{
+                fmt.Printf("Error reading config file, %s", err)
+        }</span>
+
+        <span class="cov0" title="0">err := viper.Unmarshal(&amp;configuration)
+        if err != nil </span><span class="cov0" title="0">{
+                fmt.Printf("Unable to decode into struct, %v", err)
+        }</span>
+
+        <span class="cov0" title="0">for </span><span class="cov0" title="0">{
+                fmt.Print("Enter Github Organisation-&gt; ")
+                text, _ := reader.ReadString('\n')
+                // convert CRLF to LF
+                text = strings.Replace(text, "\n", "", -1)
+
+                anOrganisation, getOrganisationErr := GithubApi.GetOrganisation(text)
+                if getOrganisationErr == nil </span><span class="cov0" title="0">{
+                        //fmt.Println(anOrganisation)
+                        respositories, err := GithubApi.GetRepositories(anOrganisation.Name)
+
+                        if err != nil </span><span class="cov0" title="0">{
+                                fmt.Println("Error getting repos")
+                                fmt.Println(err)
+                                break</span>
+                        }
+
+                        <span class="cov0" title="0">results := []Structs.GithubApiResults{}
+                        for key, repository := range respositories </span><span class="cov0" title="0">{
+                                totalCommits, topContributer, _ := GithubApi.GetTotalCommits(anOrganisation.Name, repository.Name)
+                                releases, _ := GithubApi.GetNumberOfReleases(anOrganisation.Name, repository.Name)
+                                aResult := Structs.GithubApiResults{
+                                        RepoName:         repository.Name,
+                                        NumberOfCommits:  totalCommits,
+                                        NumberOfReleases: len(releases),
+                                        TopContributer: topContributer,
+                                }
+                                results = append(results, aResult)
+                                if key &gt;= configuration.MaxRepoSize </span><span class="cov0" title="0">{
+                                        break</span>
+                                }
+                        }
+
+                        <span class="cov0" title="0">if len(results) == 0 </span><span class="cov0" title="0">{
+                                fmt.Println("No Repositories found for that Organisation")
+                                break</span>
+                        }
+
+                        <span class="cov0" title="0">headers := []string{
+                                "RepoName",
+                                "NumberOfReleases",
+                                "NumberOfCommits",
+                                "TopContributer",
+                        }
+                        buffer := new(bytes.Buffer)
+                        writer := csv.NewWriter(buffer)
+                        writer.Write(headers)
+
+                        for _, aResult := range results </span><span class="cov0" title="0">{
+
+                                row := []string{aResult.RepoName, strconv.Itoa(aResult.NumberOfReleases), strconv.Itoa(aResult.NumberOfCommits), aResult.TopContributer}
+
+                                writer.Write(row)
+                        }</span>
+                        <span class="cov0" title="0">writer.Flush()
+
+                        csvString := buffer.String()
+                        fmt.Println(csvString)
+
+                        fileOutput, err := os.Create(anOrganisation.Name + "_Results.csv")
+
+                        fileOutput.WriteString(csvString)
+
+                        fileOutput.Sync()
+                        break</span>
+                }
+
+                <span class="cov0" title="0">fmt.Print("Error getting organisation")</span>
+        }
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>

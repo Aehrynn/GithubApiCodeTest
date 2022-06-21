@@ -12,6 +12,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func main() {
@@ -37,10 +38,10 @@ func main() {
 		// convert CRLF to LF
 		text = strings.Replace(text, "\n", "", -1)
 
-		anOrganisation, getOrganisationErr := GithubApi.GetOrganisation(text)
+		anOrganisation, getOrganisationErr := GithubApi.GetOrganisation(text, configuration)
 		if getOrganisationErr == nil {
 			//fmt.Println(anOrganisation)
-			respositories, err := GithubApi.GetRepositories(anOrganisation.Name)
+			respositories, err := GithubApi.GetRepositories(anOrganisation.Name, configuration)
 
 			if err != nil {
 				fmt.Println("Error getting repos")
@@ -50,8 +51,8 @@ func main() {
 
 			results := []Structs.GithubApiResults{}
 			for key, repository := range respositories {
-				totalCommits, topContributer, _ := GithubApi.GetTotalCommits(anOrganisation.Name, repository.Name)
-				releases, _ := GithubApi.GetNumberOfReleases(anOrganisation.Name, repository.Name)
+				totalCommits, topContributer, _ := GithubApi.GetTotalCommits(anOrganisation.Name, repository.Name, configuration)
+				releases, _ := GithubApi.GetNumberOfReleases(anOrganisation.Name, repository.Name, configuration)
 				aResult := Structs.GithubApiResults{
 					RepoName:         repository.Name,
 					NumberOfCommits:  totalCommits,
@@ -90,7 +91,7 @@ func main() {
 			csvString := buffer.String()
 			fmt.Println(csvString)
 
-			fileOutput, err := os.Create(anOrganisation.Name + "_Results.csv")
+			fileOutput, err := os.Create(anOrganisation.Name + "_Results_" + time.Now().UTC().String() + ".csv")
 
 			fileOutput.WriteString(csvString)
 
