@@ -55,9 +55,9 @@
 			<div id="nav">
 				<select id="files">
 				
-				<option value="file0">GithubApiCodeTest/Main/v2/GithubApi/Organisations.go (0.0%)</option>
+				<option value="file0">GithubApiCodeTest/Main/v2/GithubApi/Organisations.go (68.4%)</option>
 				
-				<option value="file1">GithubApiCodeTest/Main/v2/GithubApi/Reposistories.go (11.5%)</option>
+				<option value="file1">GithubApiCodeTest/Main/v2/GithubApi/Reposistories.go (68.6%)</option>
 				
 				<option value="file2">GithubApiCodeTest/Main/v2/Main.go (0.0%)</option>
 				
@@ -77,12 +77,13 @@
 
 import (
         "GithubApiCodeTest/Main/v2/Structs"
+        "GithubApiCodeTest/Main/v2/config"
         "encoding/json"
         "fmt"
         "net/http"
 )
 
-func GetOrganisation(oragnisationString string) (Structs.Organisation, error) <span class="cov0" title="0">{
+func GetOrganisation(oragnisationString string, configurations config.Configurations) (Structs.Organisation, error) <span class="cov8" title="1">{
         url := "https://api.github.com/orgs/" + oragnisationString
         method := "GET"
 
@@ -93,12 +94,17 @@ func GetOrganisation(oragnisationString string) (Structs.Organisation, error) <s
                 fmt.Println(err)
                 return Structs.Organisation{}, err
         }</span>
-        <span class="cov0" title="0">res, err := client.Do(req)
+
+        <span class="cov8" title="1">if configurations.UseConfigCredentials </span><span class="cov0" title="0">{
+                req.Header.Add("Authorization", "Bearer "+configurations.OAuthToken)
+        }</span>
+
+        <span class="cov8" title="1">res, err := client.Do(req)
         if err != nil </span><span class="cov0" title="0">{
                 fmt.Println(err)
                 return Structs.Organisation{}, err
         }</span>
-        <span class="cov0" title="0">defer res.Body.Close()
+        <span class="cov8" title="1">defer res.Body.Close()
 
         organisation := Structs.Organisation{}
         decodeErr := json.NewDecoder(res.Body).Decode(&amp;organisation)
@@ -106,7 +112,7 @@ func GetOrganisation(oragnisationString string) (Structs.Organisation, error) <s
                 return Structs.Organisation{}, decodeErr
         }</span>
 
-        <span class="cov0" title="0">return organisation, nil</span>
+        <span class="cov8" title="1">return organisation, nil</span>
 }
 </pre>
 		
@@ -114,29 +120,34 @@ func GetOrganisation(oragnisationString string) (Structs.Organisation, error) <s
 
 import (
         "GithubApiCodeTest/Main/v2/Structs"
+        "GithubApiCodeTest/Main/v2/config"
         "GithubApiCodeTest/Main/v2/constants"
         "encoding/json"
         "fmt"
         "net/http"
 )
 
-func GetRepositories(organisationString string) ([]Structs.Repository, error) <span class="cov8" title="1">{
+func GetRepositories(organisationString string, configurations config.Configurations) ([]Structs.Repository, error) <span class="cov8" title="1">{
         url := "https://api.github.com/orgs/" + organisationString + "/repos"
         method := "GET"
 
         client := &amp;http.Client{}
         req, err := constants.NewHttpRequest(method, url, nil)
 
-        if err != nil </span><span class="cov8" title="1">{
-                fmt.Println(err)
+        if err != nil </span><span class="cov0" title="0">{
                 return []Structs.Repository{}, err
         }</span>
-        <span class="cov0" title="0">res, err := client.Do(req)
+
+        <span class="cov8" title="1">if configurations.UseConfigCredentials </span><span class="cov0" title="0">{
+                req.Header.Add("Authorization", "Bearer "+configurations.OAuthToken)
+        }</span>
+
+        <span class="cov8" title="1">res, err := client.Do(req)
         if err != nil </span><span class="cov0" title="0">{
                 fmt.Println(err)
                 return []Structs.Repository{}, err
         }</span>
-        <span class="cov0" title="0">defer res.Body.Close()
+        <span class="cov8" title="1">defer res.Body.Close()
 
         if res.StatusCode != http.StatusOK </span><span class="cov0" title="0">{
                 errorMessage := Structs.GithubError{}
@@ -147,17 +158,18 @@ func GetRepositories(organisationString string) ([]Structs.Repository, error) <s
                 <span class="cov0" title="0">return []Structs.Repository{}, fmt.Errorf(errorMessage.Message)</span>
         }
 
-        <span class="cov0" title="0">repositories := []Structs.Repository{}
+        <span class="cov8" title="1">repositories := []Structs.Repository{}
         decodeErr := json.NewDecoder(res.Body).Decode(&amp;repositories)
         if decodeErr != nil </span><span class="cov0" title="0">{
                 return []Structs.Repository{}, decodeErr
         }</span>
 
-        <span class="cov0" title="0">return repositories, nil</span>
+        <span class="cov8" title="1">return repositories, nil</span>
 }
 
-func GetTotalCommits(organisationString string, repositoryName string) (int, string, error) <span class="cov0" title="0">{
-        url := "https://api.github.com/repos/" + organisationString + "/" + repositoryName + "/commits"
+func GetTotalCommits(organisationString string, repositoryName string, configurations config.Configurations) (int, string, error) <span class="cov8" title="1">{
+        //url := "https://api.github.com/repos/" + organisationString + "/" + repositoryName + "/commits?per_page=500"
+        url := "https://api.github.com/repos/" + organisationString + "/" + repositoryName + "/stats/contributors"
         method := "GET"
 
         client := &amp;http.Client{}
@@ -167,35 +179,41 @@ func GetTotalCommits(organisationString string, repositoryName string) (int, str
                 fmt.Println(err)
                 return 0, "", err
         }</span>
-        <span class="cov0" title="0">res, err := client.Do(req)
+        <span class="cov8" title="1">if configurations.UseConfigCredentials </span><span class="cov0" title="0">{
+                req.Header.Add("Authorization", "Bearer "+configurations.OAuthToken)
+        }</span>
+        <span class="cov8" title="1">res, err := client.Do(req)
         if err != nil </span><span class="cov0" title="0">{
                 fmt.Println(err)
                 return 0, "", err
         }</span>
-        <span class="cov0" title="0">defer res.Body.Close()
+        <span class="cov8" title="1">defer res.Body.Close()
 
-        repositories := []Structs.Commit{}
+        repositories := []Structs.Contributer{}
         decodeErr := json.NewDecoder(res.Body).Decode(&amp;repositories)
         if decodeErr != nil </span><span class="cov0" title="0">{
                 return 0, "", decodeErr
         }</span>
 
-        <span class="cov0" title="0">topContributer := ""
-        //topContributerCommitNumber := 0
-commits := 0
 
-        for _, _ = range repositories </span><span class="cov0" title="0">{
-                commits = commits + 1
-                //if value.Total &gt;= topContributerCommitNumber {
-                //        topContributer = value.Author.Login
-                //        topContributerCommitNumber = value.Total
-                //}
-        }</span>
+        <span class="cov8" title="1">topContributer := ""
+        topContributerCommitNumber := 0
+        totalCommits := 0
 
-        <span class="cov0" title="0">return commits, topContributer, nil</span>
+        for _, value := range repositories </span><span class="cov8" title="1">{
+                totalCommits = totalCommits + value.Total
+                if value.Total &gt;= topContributerCommitNumber </span><span class="cov8" title="1">{
+                        topContributer = value.Author.Login
+                        topContributerCommitNumber = value.Total
+                }</span>
+        }
+
+        <span class="cov8" title="1">return totalCommits, topContributer, nil</span>
 }
 
-func GetNumberOfReleases(organisationString string, repositoryName string) ([]Structs.Releases, error) <span class="cov0" title="0">{
+
+
+func GetNumberOfReleases(organisationString string, repositoryName string, configurations config.Configurations) ([]Structs.Releases, error) <span class="cov8" title="1">{
         url := "https://api.github.com/repos/" + organisationString + "/" + repositoryName + "/releases"
         method := "GET"
 
@@ -206,12 +224,15 @@ func GetNumberOfReleases(organisationString string, repositoryName string) ([]St
                 fmt.Println(err)
                 return []Structs.Releases{}, err
         }</span>
-        <span class="cov0" title="0">res, err := client.Do(req)
+        <span class="cov8" title="1">if configurations.UseConfigCredentials </span><span class="cov0" title="0">{
+                req.Header.Add("Authorization", "Bearer "+configurations.OAuthToken)
+        }</span>
+        <span class="cov8" title="1">res, err := client.Do(req)
         if err != nil </span><span class="cov0" title="0">{
                 fmt.Println(err)
                 return []Structs.Releases{}, err
         }</span>
-        <span class="cov0" title="0">defer res.Body.Close()
+        <span class="cov8" title="1">defer res.Body.Close()
 
         repositories := []Structs.Releases{}
         decodeErr := json.NewDecoder(res.Body).Decode(&amp;repositories)
@@ -219,7 +240,7 @@ func GetNumberOfReleases(organisationString string, repositoryName string) ([]St
                 return []Structs.Releases{}, decodeErr
         }</span>
 
-        <span class="cov0" title="0">return repositories, nil</span>
+        <span class="cov8" title="1">return repositories, nil</span>
 }
 </pre>
 		
@@ -237,6 +258,7 @@ import (
         "os"
         "strconv"
         "strings"
+        "time"
 )
 
 func main() <span class="cov0" title="0">{
@@ -262,10 +284,10 @@ func main() <span class="cov0" title="0">{
                 // convert CRLF to LF
                 text = strings.Replace(text, "\n", "", -1)
 
-                anOrganisation, getOrganisationErr := GithubApi.GetOrganisation(text)
+                anOrganisation, getOrganisationErr := GithubApi.GetOrganisation(text, configuration)
                 if getOrganisationErr == nil </span><span class="cov0" title="0">{
                         //fmt.Println(anOrganisation)
-                        respositories, err := GithubApi.GetRepositories(anOrganisation.Name)
+                        respositories, err := GithubApi.GetRepositories(anOrganisation.Name, configuration)
 
                         if err != nil </span><span class="cov0" title="0">{
                                 fmt.Println("Error getting repos")
@@ -275,13 +297,13 @@ func main() <span class="cov0" title="0">{
 
                         <span class="cov0" title="0">results := []Structs.GithubApiResults{}
                         for key, repository := range respositories </span><span class="cov0" title="0">{
-                                totalCommits, topContributer, _ := GithubApi.GetTotalCommits(anOrganisation.Name, repository.Name)
-                                releases, _ := GithubApi.GetNumberOfReleases(anOrganisation.Name, repository.Name)
+                                totalCommits, topContributer, _ := GithubApi.GetTotalCommits(anOrganisation.Name, repository.Name, configuration)
+                                releases, _ := GithubApi.GetNumberOfReleases(anOrganisation.Name, repository.Name, configuration)
                                 aResult := Structs.GithubApiResults{
                                         RepoName:         repository.Name,
                                         NumberOfCommits:  totalCommits,
                                         NumberOfReleases: len(releases),
-                                        TopContributer: topContributer,
+                                        TopContributer:   topContributer,
                                 }
                                 results = append(results, aResult)
                                 if key &gt;= configuration.MaxRepoSize </span><span class="cov0" title="0">{
@@ -315,7 +337,7 @@ func main() <span class="cov0" title="0">{
                         csvString := buffer.String()
                         fmt.Println(csvString)
 
-                        fileOutput, err := os.Create(anOrganisation.Name + "_Results.csv")
+                        fileOutput, err := os.Create(anOrganisation.Name + "_Results_" + time.Now().UTC().String() + ".csv")
 
                         fileOutput.WriteString(csvString)
 

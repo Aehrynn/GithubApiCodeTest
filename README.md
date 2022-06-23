@@ -23,7 +23,7 @@ To run unit tests and coverage
   * There is a discrepancy shown when seeing the total commits on the web ui versus the API
 * Rate Control Limits
 * Option for the kind of format of the output file
-* Unit testing
+* More Unit testing
 * Handle pagination of Requests
 
 
