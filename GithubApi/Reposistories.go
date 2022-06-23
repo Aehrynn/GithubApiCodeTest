@@ -51,7 +51,7 @@ func GetRepositories(organisationString string, configurations config.Configurat
 }
 
 func GetTotalCommits(organisationString string, repositoryName string, configurations config.Configurations) (int, string, error) {
-	//url := "https://api.github.com/repos/" + organisationString + "/" + repositoryName + "/commits"
+	//url := "https://api.github.com/repos/" + organisationString + "/" + repositoryName + "/commits?per_page=500"
 	url := "https://api.github.com/repos/" + organisationString + "/" + repositoryName + "/stats/contributors"
 	method := "GET"
 
